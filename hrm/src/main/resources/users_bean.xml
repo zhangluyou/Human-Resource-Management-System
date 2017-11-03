@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.jointem.hrm.dao.UsersDao">
+    <resultMap id="users" type="Users">
+        <result property="id" column="id"/>
+        <result property="username" column="username" jdbcType="VARCHAR"/>
+        <result property="name" column="name" jdbcType="VARCHAR"/>
+
+        <result property="password" column="password" jdbcType="VARCHAR"/>
+        <result property="sex" column="sex" jdbcType="VARCHAR"/>
+        <result property="birthday" column="birthday" jdbcType="TIMESTAMP"/>
+        <result property="createtime" column="createtime" jdbcType="TIMESTAMP"/>
+        <!--  <result property="isadmin" column="isadmin" jdbcType="VARCHAR"/>-->
+        <result property="content" column="content" jdbcType="VARCHAR"/>
+        <result property="jobId" column="job_id" jdbcType="VARCHAR"/>
+        <result property="positionId" column="position_id" jdbcType="VARCHAR"/>
+
+    </resultMap>
+
+    <!-- 关联查询角色集合与权限集合 -->
+    <resultMap type="Users" id="usersMap" extends="users">
+        <collection property="rolesList" column="id" javaType="list" select="selectAllRoles"></collection>
+    </resultMap>
+
+    <resultMap type="com.jointem.hrm.entity.Roles" id="RoleMap">
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="description" property="description" jdbcType="VARCHAR"/>
+        <collection property="permissionsList" column="id" javaType="list" select="selectAllpermissions"></collection>
+    </resultMap>
+
+    <select id="selectAllpermissions" resultType="com.jointem.hrm.entity.Permissions" parameterType="java.lang.Integer">
+  		select id, url,name  from permissions where id in (select roles_permissions.permission_id from roles_permissions where roles_permissions.role_id=#{id})
+  	</select>
+    <select id="selectAllRoles" resultMap="RoleMap" parameterType="java.lang.Integer">
+  		select id, description from roles where id in (select users_roles.role_id from users_roles where users_roles.user_id=#{id})
+  	</select>
+
+    <select id="findUsersByName" parameterType="String" resultMap="usersMap">
+    	select id,username,name,password,sex,birthday,createtime,content from users where username=#{username}
+    </select>
+    <!-- 关联查询角色集合与权限集合 -->
+
+
+    <!-- select语句 -->
+    <select id="selectUserByID" parameterType="int" resultType="Users">
+        select id,username,name,password,sex,birthday,createtime,content,job_id,position_id from users where users.id = #{id}
+    </select>
+    <insert id="insertUser" parameterType="Users">
+        <selectKey keyProperty="id" resultType="int">
+            select LAST_INSERT_ID()
+        </selectKey>
+        insert into users (job_id,username,name,password,sex,birthday,createtime,content,position_id)
+        values(#{jobId},#{username},#{name},#{password},#{sex},#{birthday},#{createtime},#{content},#{positionId})
+    </insert>
+    <select id="selectUserByName" parameterType="String" resultType="Users">
+        select * from users where users.username= #{username}
+    </select>
+    <!--where代表查询所有-->
+    <select id="selectAllUser" resultMap="users" parameterType="map">
+        select id,job_id,username,name,password,sex,birthday,createtime,position_id,
+      CASE WHEN (length(content) &lt;=5) THEN content ELSE CONCAT(left(content,5),'……') END
+        as content from users  where 1=1
+        <trim>
+            <if test="username != null">
+                and username like concat(concat('%',#{username}),'%')
+            </if>
+            <if test="sort ==1 and starTime != null">
+                and createtime &gt; #{starTime}
+            </if>
+            <if test="sort ==1 and endTime != null">
+                and createtime &lt; #{endTime}
+            </if>
+            <if test="sort ==2 and starTime != null">
+                and birthday &gt; #{starTime}
+            </if>
+            <if test="sort ==2 and endTime != null">
+                and birthday &lt; #{endTime}
+            </if>
+            <if test="pageSize != null and pageNum != null">
+                order by createtime DESC limit #{pageNum} ,#{pageSize}
+            </if>
+        </trim>
+
+    </select>
+    <select id="selectAllCount" resultType="int" parameterType="map">
+        select count(*) from users where 1=1
+        <trim>
+            <if test="username != null">
+                and username like concat(concat('%',#{username}),'%')
+            </if>
+            <if test="sort ==1 and starTime != null">
+                and createtime &gt; #{starTime}
+            </if>
+            <if test="sort ==1 and endTime != null">
+                and createtime &lt; #{endTime}
+            </if>
+            <if test="sort ==2 and starTime != null">
+                and birthday &gt; #{starTime}
+            </if>
+            <if test="sort ==2 and endTime != null">
+                and birthday &lt; #{endTime}
+            </if>
+        </trim>
+    </select>
+
+    <select id="getUserByName" parameterType="String" resultMap="users">
+    select id,username,password from users where users.username= #{username}
+</select>
+
+
+    <select id="selectAllUserMo" resultType="Users">
+        select id,username,name,password,sex,birthday,createtime,
+        CASE  WHEN (length(content) &lt;=5) THEN content ELSE CONCAT(left(content,5),'……') END
+       as content from users
+    </select>
+
+
+    <!--item表示集合中每一个元素进行迭代时的别名，-->
+    <!--index指 定一个名字，用于表示在迭代过程中，每次迭代到的位置，-->
+    <!--open表示该语句以什么开始，-->
+    <!--separator表示在每次进行迭代之间以什么符号作为分隔 符，-->
+    <!--close表示以什么结束。-->
+    <!--1. 如果传入的是单参数且参数类型是一个List的时候，collection属性值为list-->
+    <!--2. 如果传入的是单参数且参数类型是一个array数组的时候，collection的属性值为array-->
+    <!--3. 如果传入的参数是多个的时候，我们就需要把它们封装成一个Map了，当然单参数也可-->
+    <delete id="deleteUser" parameterType="int">
+        delete users  from users where id=#{id}
+    </delete>
+    <!-- <update id="updateUser" parameterType="Users" >
+         update users set username= #{username},password=#{password},sex=#{sex},birthday=#{birthday},createtime=#{createtime},isadmin=#{isadmin},content=#{content}
+         where id=#{id}
+     </update>-->
+    <delete id="delectUserByIds" parameterType="int">
+        delete users from users where id IN
+        <foreach collection="list" index="index" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    <update id="updateUser" parameterType="Users">
+        update users
+        <set>
+            <if test="username != null">
+                username = #{username,jdbcType=VARCHAR},
+            </if>
+            <if test="name != null">
+                name = #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="password != null">
+                password = #{password,jdbcType=VARCHAR},
+            </if>
+            <if test="sex != null">
+                sex = #{sex,jdbcType=BIT},
+            </if>
+            <if test="birthday != null">
+                birthday = #{birthday,jdbcType=DATE},
+            </if>
+            <if test="createtime != null">
+                createtime = #{createtime,jdbcType=TIMESTAMP},
+            </if>
+
+            <if test="content != null">
+                content = #{content,jdbcType=LONGVARCHAR},
+            </if>
+            <if test="jobId != null">
+                job_id = #{jobId,jdbcType=VARCHAR},
+            </if>
+            <if test="positionId !=null">
+                position_id =#{positionId,jdbcType=VARCHAR}
+            </if>
+        </set>
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+
+    <!-- 通过ID得到真实姓名 -->
+    <select id="getNameById" parameterType="int" resultType="String">
+		 select name from users where id=#{id}
+	</select>
+
+    <!-- 获取所有部门 -->
+    <select id="getDep" resultType="String">
+       select department_id from user_position
+    </select>
+
+    <!-- 通过部门获取职位 -->
+    <select id="getPositionByDep" parameterType="String" resultType="String">
+        select position_id from user_position where department_id=#{dep}
+    </select>
+
+    <!-- 通过职位获取Id -->
+    <select id="getUidByPos" parameterType="String" resultType="int">
+       select uid from user_position where position_id=#{pos}
+     </select>
+
+    <!--<select id="selectDivision" parameterType="int" resultType="map">-->
+    <!--select department_name from department where parent_did=#{did}-->
+    <!--</select>-->
+    <select id="selectHeadquarters" resultType="com.jointem.hrm.entity.Department1">
+         select d.department_name name ,d.parent_did pId, '1' isParent,d.id id from department  as d
+        union
+        select d2.position_name name ,d2.d_id pId ,'0' isParent, d2.id id from com_position as d2,department  as d
+    </select>
+    <select id="selectPositionNameById" parameterType="map" resultType="map">
+        select d.department_name dname,c.position_name cname from department d,com_position c
+        where d.id = #{pId} and c.id=#{id} limit 1
+    </select>
+
+</mapper>
+
+
+

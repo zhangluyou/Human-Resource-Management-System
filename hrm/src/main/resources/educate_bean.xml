@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.jointem.hrm.dao.EducateDao">
+
+	<resultMap id="educate1" type="Educate" extends="educate">
+		<collection property="userList" resultMap="usersRela"></collection>
+	</resultMap>
+
+	<resultMap id="educate2" type="Educate" extends="educate">
+		<collection property="userList" column="eid" select="selectAllUser"></collection>
+	</resultMap>
+
+	<resultMap id="userEducates" type="Users" extends="usersRela">
+		<collection property="educates" resultMap="educate"></collection>
+	</resultMap>
+
+	<resultMap id="educate" type="Educate">
+		<result property="id" column="eid" />
+		<result property="purpose" column="purpose" jdbcType="VARCHAR" />
+		<result property="name" column="ename" jdbcType="VARCHAR" />
+		<result property="begintime" column="begintime" jdbcType="VARCHAR" />
+		<result property="endtime" column="endtime" jdbcType="TIMESTAMP" />
+		<result property="createtime" column="ect" jdbcType="TIMESTAMP" />
+		<result property="datum" column="datum" jdbcType="VARCHAR" />
+		<result property="teacher" column="teacher" jdbcType="VARCHAR" />
+		<result property="student" column="student" jdbcType="VARCHAR" />
+		<result property="educate" column="educate" jdbcType="VARCHAR" />
+		<result property="effect" column="effect" jdbcType="VARCHAR" />
+		<result property="summarize" column="summarize" jdbcType="VARCHAR" />
+	</resultMap>
+
+	<resultMap id="usersRela" type="Users">
+		<result property="id" column="uid" />
+		<result property="username" column="username" jdbcType="VARCHAR" />
+		<result property="name" column="uname" jdbcType="VARCHAR" />
+		<result property="sex" column="sex" jdbcType="VARCHAR" />
+		<result property="birthday" column="birthday" jdbcType="TIMESTAMP" />
+		<result property="createtime" column="uct" jdbcType="TIMESTAMP" />
+		<result property="content" column="content" jdbcType="VARCHAR" />
+	</resultMap>
+
+	<!-- 查询培训审核状态 -->
+	<!-- <select id="findMessage" parameterType="int" resultType="com.jointem.hrm.entity.Message"> 
+		select * from msg where receiver_id=#{id} </select> -->
+	<!--插入审核消息 -->
+	<insert id="addmessage" parameterType="com.jointem.hrm.entity.Message"
+		useGeneratedKeys="true" keyProperty="msgId">
+		insert into
+		msg(sender_id,receiver_id,content,message_type,send_time)values(#{sender_id},#{receiver_id},#{content},#{message_type},#{send_time})
+	</insert>
+
+	<!-- 改变审核消息为已读状态 -->
+	<!-- <select id="messageIsRead" parameterType="int"> update msg set isRead=1 
+		where educate_id=#{id} </select> -->
+
+	<!-- select语句 -->
+	<select id="findEducateById" resultMap="educate">
+		select * from educate
+		where educate.id = #{id}
+	</select>
+
+	<select id="getEducateById" parameterType="int" resultMap="educate1">
+		select ed.id eid,ed.purpose,ed.name
+		ename,ed.begintime,ed.endtime,ed.createtime
+		ect,ed.datum,ed.teacher,ed.student,ed.educate,ed.effect,
+		ed.summarize,u.name uname,u.id
+		uid,u.username,u.sex,u.birthday,u.content,u.createtime uct from
+		educate ed,users_educate_trainrecord uet,users u where
+		ed.id = #{id}
+		and
+		ed.id = uet.educate_id and
+		u.id = uet.users_id
+	</select>
+
+	<select id="queryByUserId" resultMap="educate2">
+		select ed.id
+		eid,ed.purpose,ed.name ename,ed.begintime,ed.endtime,ed.createtime
+		ect,ed.datum,ed.teacher,ed.student,ed.educate,ed.effect,
+		ed.summarize,u.name uname,u.id
+		uid,u.username,u.sex,u.birthday,u.content,u.createtime uct from
+		educate ed,users_educate_trainrecord uet,users u where
+		ed.id =
+		uet.educate_id and
+		u.id = uet.users_id and u.id=#{uid}
+	</select>
+
+	<select id="selectAllUser" resultMap="usersRela">
+		select u.id uid,u.name
+		uname from users u,users_educate_trainrecord uet where u.id =
+		uet.users_id and uet.educate_id = #{eid}
+	</select>
+
+	<select id="getPersonEducateRecord" resultMap="userEducates">
+		select u.name
+		uname,u.id
+		uid,u.username,u.sex,u.birthday,u.content,
+		u.createtime
+		uct,ed.id
+		eid,ed.purpose,ed.name ename,ed.begintime,ed.endtime,
+		ed.createtime
+		ect,ed.datum,ed.teacher,ed.student,ed.educate,ed.effect,
+		ed.summarize
+		from educate ed,users_educate_trainrecord uet,users u
+		where
+		ed.id =uet.educate_id and
+		ed.isreviewed=1 and
+		u.id = uet.users_id
+		and
+		ed.educate=#{b} and
+		uet.isjoin=#{isjoin} and
+		u.id=#{id} and
+		ed.name
+		like CONCAT("%",#{name},"%")
+		and #{time}&gt;ed.begintime limit
+		#{startnum},#{pagesize}
+	</select>
+
+	<select id="getPersonCountOfEducateRecord" resultType="int">
+		select
+		count(uet.id) from
+		educate ed,users_educate_trainrecord uet,users u
+		where
+		ed.id =
+		uet.educate_id and
+		ed.educate=#{b} and
+		ed.isreviewed=1 and
+		u.id = uet.users_id and
+		uet.isjoin=#{isjoin} and
+		u.id=#{id} and
+		ed.name
+		like CONCAT("%",#{name},"%")
+		and #{time}&gt;ed.begintime
+	</select>
+
+	<!-- 执行增加操作的SQL语句。id和parameterType分别与IUserOperation接口中的addUser方法的名字和参数类型一致。 
+		useGeneratedKeys设置为"true"表明要MyBatis获取由数据库自动生成的主键；keyProperty="id"指定把获取到的主键值注入到User的id属性 -->
+	<insert id="saveEducate" parameterType="Educate"
+		useGeneratedKeys="true" keyProperty="id">
+		insert into
+		educate(name,purpose,begintime,endtime,datum,teacher,student,createtime,educate,effect,summarize,month)
+		values(#{name},#{purpose},#{begintime},#{endtime},#{datum},#{teacher},#{student},#{createtime},#{educate},#{effect},#{summarize},#{month})
+	</insert>
+	<!-- 返回list的select语句，注意 resultMap的值是指向前面定义好的 -->
+	<select id="getEducateByName" parameterType="String" resultType="Educate">
+		select * from educate where name =#{name}
+	</select>
+
+	<insert id="insertEducateUser" parameterType="int">
+		insert into
+		users_educate_trainrecord(users_id,educate_id)
+		values(#{uid},#{eid})
+	</insert>
+
+	<!-- 搜索所有没有完成的计划，educate 为“是否完成”字段，1完成，0没有完成 -->
+
+	<select id="getAllEducate" resultType="Educate" parameterType="int">
+		select * from educate c where c.educate=0 limit
+		#{startnum},#{pagesize}
+	</select>
+
+	<!-- 搜索所有待审核的计划 -->
+	<select id="getAllUnLookThrough" resultType="Educate"
+		parameterType="int">
+		select * from educate where isreviewed=2 limit
+		#{startnum},#{pagesize}
+	</select>
+
+	<!-- 审核计划 -->
+	<select id="lookThrough" parameterType="int">
+		update educate set
+		isreviewed=1 where id=#{id}
+	</select>
+
+	<!-- 提交审核计划 -->
+	<select id="submitLookThrough" parameterType="int">
+		update educate set
+		isreviewed=2 where id=#{id} and educate=0
+	</select>
+
+	<!-- 获取所有待审核条数 -->
+	<select id="getCountOfUnLookThrough" resultType="int"
+		parameterType="int">
+		select count(*) from educate where isreviewed=2
+	</select>
+
+	<select id="getCountOfAllEducate" resultType="int"
+		parameterType="int">
+		select count(*) from educate c where c.educate='0'
+	</select>
+
+	<!-- 搜索所有已经完成的计划，edcate为是否完成字段，1表示完成，0表示没有完成 -->
+	<select id="getAllFinishedEducat" parameterType="int"
+		resultType="Educate">
+		select * from educate c where c.educate=1 limit
+		#{startnum},#{pagesize}
+	</select>
+
+	<select id="getCountOfAllFinishedEducat" resultType="int">
+		select
+		count(*) from educate c where c.educate='1'
+	</select>
+
+	<!-- 删除计划 -->
+	<delete id="deleteEducate" parameterType="int">
+		delete from educate
+		where id=#{id}
+	</delete>
+	<!-- 定义的resultMap，可以解决类的属性名和数据库列名不一致的问题 -->
+
+	<delete id="deleteEutByEid" parameterType="int">
+		delete from
+		users_educate_trainrecord where educate_id=#{eid}
+	</delete>
+
+	<update id="updateeducate" parameterType="Educate">
+		update educate set
+		name=#{name},purpose=#{purpose},begintime=#{begintime},endtime=#{endtime},
+		datum=#{datum},teacher=#{teacher},student=#{student},createtime=#{createtime},educate=#{educate},effect=#{effect},summarize=#{summarize},
+		effectFlag=#{effectFlag}
+		where id=#{id}
+	</update>
+	<!-- 变更是否完成的标识 -->
+	<update id="updateEducateFlag" parameterType="int">
+		update educate set
+		educate=1 where id=#{id}
+	</update>
+
+	<select id="queryByCondition" resultType="Educate">
+		select * from educate ed <!-- where ed.begintime &gt; #{begintime} and ed.endtime 
+			&lt; #{endtime} -->
+		<where>
+			<if test="begintime!=null"> ed.begintime &gt;= #{begintime}</if>
+			and ed.name like CONCAT('%',#{name},'%') and ed.educate ='0' limit
+			#{startnum},#{pagesize}
+		</where>
+	</select>
+
+	<select id="queryByMonth" resultType="Educate">
+		select * from educate where
+		educate=1 and month like CONCAT('%',#{date},'%')
+	</select>
+
+	<select id="querycountByCondition" resultType="int">
+		select count(*) from educate ed
+		<where>
+			<if test="begintime!=null"> ed.begintime &gt;= #{begintime}</if>
+			and ed.name like CONCAT('%',#{name},'%') and ed.educate = '0'
+		</where>
+	</select>
+
+	<update id="updateUet" parameterType="int">
+		update
+		users_educate_trainrecord set isjoin=#{isjoin}
+		where users_id=#{uid}
+		and educate_id=#{eid}
+	</update>
+	<!-- <update id="updateEducate" parameterType="Educate" > update educate 
+		set name=#{name},purpose=#{purpose},begintime=#{begintime},endtime=#{endtime}, 
+		datum=#{datum},eacher=#{eacher},student=#{student},createtime=#{createtime},educate=#{educate},effect=#{effect},summarize=#{summarize} 
+		where id=#{id} </update> -->
+
+	<!-- <delete id="deleteEducate" parameterType="int"> delete from educate 
+		where id=#{id} </delete> -->
+
+	<!-- 取消审核 -->
+	<update id="noCheck" parameterType="int">
+		update educate set
+		isreviewed=3 where id=#{id}
+	</update>
+	<!-- 添加备注 -->
+	<update id="addRemark">
+		update educate set
+		remark =#{remark} where id=#{id}
+	</update>
+</mapper>
+
+
+

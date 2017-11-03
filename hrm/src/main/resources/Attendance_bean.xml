@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.jointem.hrm.dao.AttendanceDao">
+	<resultMap id="BaseResultMap" type="com.jointem.hrm.entity.Attendence">
+		<id column="id" property="id" jdbcType="INTEGER" />
+		<result column="name" property="name" jdbcType="VARCHAR" />
+		<result column="department" property="department" jdbcType="VARCHAR" />
+		<result column="should_attendance" property="should_attendance" jdbcType="FLOAT" />
+		<result column="real_attendance" property="real_attendance" jdbcType="FLOAT" />
+		<result column="late_time" property="late_time" jdbcType="VARCHAR" />
+		<result column="attendance_rate" property="attendance_rate" jdbcType="FLOAT" />
+		<result column="remarks" property="remarks" jdbcType="VARCHAR" />
+		<result column="date" property="date" jdbcType="VARCHAR" />
+		<result column="info" property="info" jdbcType="VARCHAR" />
+	</resultMap>
+
+	<insert id="addAttendance" parameterType="com.jointem.hrm.entity.Attendence">
+		INSERT  INTO work_attendence(name,department,should_attendance,
+		real_attendance,late_time,attendance_rate,remarks,date,info)
+		VALUES(#{name},#{department},#{should_attendance},#{real_attendance},
+		#{late_time},#{attendance_rate},#{remarks},#{date},#{info})
+	</insert>
+	<select id="selectAttendanceCountByDate" parameterType="String" resultType="java.lang.Integer">
+		SELECT  COUNT(*) FROM  work_attendence
+		  WHERE date=#{info,jdbcType=VARCHAR}
+
+	</select>
+
+	<select id="selectAttendanceListByMonthAndUserName" parameterType="map" resultType="com.jointem.hrm.entity.Attendence">
+		SELECT * FROM  work_attendence
+		<if test="searchMonth!=null and searchMonth!=''">
+			WHERE work_attendence.date =#{searchMonth}
+		</if>
+		<if test="currUserName!=null and currUserName!=''">
+			AND  work_attendence.name=#{currUserName}
+		</if>
+
+	</select>
+
+	<select id="selectMonthList" resultType="String">
+		select distinct date from work_attendence
+		ORDER  by date DESC
+	</select>
+
+	<select id="selectNamebyUserName" parameterType="String" resultType="String">
+		select name from users
+		where username=#{username}
+	</select>
+
+	<delete id="deleteAttendanceByDate" parameterType="java.lang.String">
+		DELETE  FROM work_attendence
+			WHERE date=#{date,jdbcType=VARCHAR}
+	</delete>
+
+
+</mapper>

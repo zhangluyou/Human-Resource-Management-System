@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.jointem.hrm.dao.RolesMapper">
+	<resultMap id="BaseResultMap" type="com.jointem.hrm.entity.Roles">
+		<id column="id" property="id" jdbcType="INTEGER" />
+		<result column="description" property="description" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	
+	<sql id="Example_Where_Clause">
+		<where>
+			<foreach collection="oredCriteria" item="criteria" separator="or">
+				<if test="criteria.valid">
+					<trim prefix="(" suffix=")" prefixOverrides="and">
+						<foreach collection="criteria.criteria" item="criterion">
+							<choose>
+								<when test="criterion.noValue">
+									and ${criterion.condition}
+								</when>
+								<when test="criterion.singleValue">
+									and ${criterion.condition} #{criterion.value}
+								</when>
+								<when test="criterion.betweenValue">
+									and ${criterion.condition} #{criterion.value} and
+									#{criterion.secondValue}
+								</when>
+								<when test="criterion.listValue">
+									and ${criterion.condition}
+									<foreach collection="criterion.value" item="listItem"
+										open="(" close=")" separator=",">
+										#{listItem}
+									</foreach>
+								</when>
+							</choose>
+						</foreach>
+					</trim>
+				</if>
+			</foreach>
+		</where>
+	</sql>
+	<sql id="Update_By_Example_Where_Clause">
+		<where>
+			<foreach collection="example.oredCriteria" item="criteria"
+				separator="or">
+				<if test="criteria.valid">
+					<trim prefix="(" suffix=")" prefixOverrides="and">
+						<foreach collection="criteria.criteria" item="criterion">
+							<choose>
+								<when test="criterion.noValue">
+									and ${criterion.condition}
+								</when>
+								<when test="criterion.singleValue">
+									and ${criterion.condition} #{criterion.value}
+								</when>
+								<when test="criterion.betweenValue">
+									and ${criterion.condition} #{criterion.value} and
+									#{criterion.secondValue}
+								</when>
+								<when test="criterion.listValue">
+									and ${criterion.condition}
+									<foreach collection="criterion.value" item="listItem"
+										open="(" close=")" separator=",">
+										#{listItem}
+									</foreach>
+								</when>
+							</choose>
+						</foreach>
+					</trim>
+				</if>
+			</foreach>
+		</where>
+	</sql>
+	<sql id="Base_Column_List">
+		id, description
+	</sql>
+<!--按角色名称查找角色列表-->
+	<select id="findCurrRoles" parameterType="map" resultType="com.jointem.hrm.entity.Roles">
+		select
+		<include refid="Base_Column_List" />
+		from roles
+		<if test="searchText !=null and searchText!='' ">	
+			where roles.description  LIKE concat('%',#{searchText},'%')
+		</if>
+		<if test="start !=null and pageSize != null">
+			limit #{start},#{pageSize}
+		</if>
+	</select>
+<!--按角色名称查找角色列表-->
+
+	
+<!-- 按角色名查找角色列表总数 -->
+    <select id="findRolesCount"  parameterType="map" resultType="int">
+		select count(*) from roles
+		<if test="searchText !=null and searchText!='' ">	
+			where roles.description  LIKE concat('%',#{searchText},'%')
+		</if>
+	</select>
+<!-- 按角色名查找角色列表总数 -->
+    
+	
+<!-- 查询用户以及对应角色 -->
+	<resultMap type="com.jointem.hrm.entity.Users" id="usersMap">
+		<result property="id" column="id" />
+        <result property="username" column="username" jdbcType="VARCHAR"/>
+        <result property="password" column="password" jdbcType="VARCHAR"/>
+        <result property="sex" column="sex" jdbcType="VARCHAR"/>
+        <result property="birthday" column="birthday" jdbcType="TIMESTAMP"/>
+        <result property="createtime" column="createtime" jdbcType="TIMESTAMP" />
+        <result property="content" column="content" jdbcType="VARCHAR"/>
+  		<collection property="rolesList" column="id" javaType="list" select="selectRolesList"></collection>
+  	</resultMap>
+  	
+	 <resultMap type="com.jointem.hrm.entity.Roles" id="rolesMap" extends="BaseResultMap">
+  	</resultMap>
+  	
+  	<select id="selectRolesList" resultMap="rolesMap" parameterType="java.lang.Integer">
+  		select id, description from roles where id in (select users_roles.role_id from users_roles where users_roles.user_id=#{id})
+  	</select>
+
+	<!-- 按用户呢称或描述查找用户角色列表 -->
+	<select id="finUsersAndRolesList" parameterType="map" resultMap="usersMap">
+		select * from users
+		<if test="searchText !=null and searchText!='' ">	
+			where(users.username  LIKE concat('%',#{searchText},'%') or
+				users.content  LIKE concat('%',#{searchText},'%')
+				)
+		</if>
+		<if test="start !=null and pageSize != null">
+			limit #{start},#{pageSize}
+		</if>
+	</select>
+<!-- 查询用户以及对应角色 -->
+
+
+<!-- 查询角色分配的总页数 ,根据用户呢称或者用户描述-->
+	<select id="finUsersAndRolesPageCount"  parameterType="map" resultType="int">
+		select count(*) from users
+		<if test="searchText !=null and searchText!='' ">
+			where(users.username  LIKE concat('%',#{searchText},'%') or
+				users.content  LIKE concat('%',#{searchText},'%')
+				)
+		</if>
+	</select>
+<!-- 查询角色分配的总页数,根据用户呢称或者用户描述 -->
+
+	<select id="findCountByName" parameterType="String" resultType="int">
+		select count(*) from roles where description like concat('%',#{roleName},'%')
+	</select>
+
+
+
+	<select id="selectAllRoles" parameterType="String"
+		resultType="com.jointem.hrm.entity.Roles">
+		select * from roles
+	</select>
+	<select id="selectByPrimaryKey" resultMap="BaseResultMap"
+		parameterType="java.lang.Integer">
+		select
+		<include refid="Base_Column_List" />
+		from roles
+		where id = #{id,jdbcType=INTEGER}
+	</select>
+	<delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+		delete from roles
+		where id = #{id,jdbcType=INTEGER}
+	</delete>
+	
+<!-- 根据用户id删除用户角色关联表（users_roles）中的数据 -->	
+	<delete id="deleteUserRolesByUserId" parameterType="com.jointem.hrm.entity.UsersRoles">
+		delete from users_roles
+		where user_id=#{user_id}
+	</delete>
+<!-- 根据用户id删除用户角色关联表（users_roles）中的数据 -->	
+
+	<insert id="insert" parameterType="com.jointem.hrm.entity.Roles">
+		insert into roles (id, description)
+		values (#{id,jdbcType=INTEGER}, #{description,jdbcType=VARCHAR})
+	</insert>
+	<insert id="insertSelective" parameterType="com.jointem.hrm.entity.Roles">
+		insert into roles
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				id,
+			</if>
+			<if test="description != null">
+				description,
+			</if>
+		</trim>x
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				#{id,jdbcType=INTEGER},
+			</if>
+			<if test="description != null">
+				#{description,jdbcType=VARCHAR},
+			</if>
+		</trim>
+	</insert>
+	
+<!-- 为用户分配角色，将用户id以及对应的角色id插入users_roles表中 -->
+	<insert id="updateUsersRoles" parameterType="com.jointem.hrm.entity.UsersRoles">
+	    insert into users_roles (user_id, role_id)
+	    values (#{user_id,jdbcType=INTEGER}, #{role_id,jdbcType=INTEGER})
+	</insert>
+<!-- 为用户分配角色，将用户id以及对应的角色id插入users_roles表中 -->
+
+	<update id="updateByExampleSelective" parameterType="map">
+		update roles
+		<set>
+			<if test="record.id != null">
+				id = #{record.id,jdbcType=INTEGER},
+			</if>
+			<if test="record.description != null">
+				description = #{record.description,jdbcType=VARCHAR},
+			</if>
+		</set>
+		<if test="_parameter != null">
+			<include refid="Update_By_Example_Where_Clause" />
+		</if>
+	</update>
+	<update id="updateByExample" parameterType="map">
+		update roles
+		set id = #{record.id,jdbcType=INTEGER},
+		description = #{record.description,jdbcType=VARCHAR}
+		<if test="_parameter != null">
+			<include refid="Update_By_Example_Where_Clause" />
+		</if>
+	</update>
+	<update id="updateByPrimaryKeySelective" parameterType="com.jointem.hrm.entity.Roles">
+		update roles
+		<set>
+			<if test="description != null">
+				description = #{description,jdbcType=VARCHAR},
+			</if>
+		</set>
+		where id = #{id,jdbcType=INTEGER}
+	</update>
+	<update id="updateByPrimaryKey" parameterType="com.jointem.hrm.entity.Roles">
+		update roles
+		set description = #{description,jdbcType=VARCHAR}
+		where id = #{id,jdbcType=INTEGER}
+	</update>
+
+</mapper>

@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.jointem.hrm.dao.StipendDao">
+
+		<!-- 插入固定薪金 -->
+     	<insert id="savaFixedStipend" parameterType="com.jointem.hrm.entity.Stipend"
+		useGeneratedKeys="true" keyProperty="id">
+ 			insert into 
+ 			stipend(emp_id,basic,level,eat,house,phone_call,traffic,secret,fixed_sum,granttime)
+ 			values(#{emp_id},#{basic},#{level},#{eat},#{house},#{phone_call},#{traffic},#{secret},#{fixed_sum},#{granttime})
+		</insert>
+          <!-- 更改固定薪金信息 -->  
+		<update id="updateFixedStipend" parameterType="com.jointem.hrm.entity.Stipend" >
+		update stipend
+		set basic=#{basic},level=#{level},eat=#{eat},house=#{house},phone_call=#{phone_call},traffic=#{traffic},
+		secret=#{secret},fixed_sum=#{fixed_sum},granttime=#{granttime} where emp_id=#{emp_id}
+		</update>
+		
+		
+		<!-- 通过月份查询薪金信息     u-users,ss-stipend,sf-stipend_float,up-com_position,cp-cut_pay,pr-payroll -->
+		<select id="findAllStipendByMonth" resultType="com.jointem.hrm.entity.Stipend" parameterType="String">
+				SELECT u.name,u.id emp_id,de.department_name department,ss.eat ,ss.basic ,
+				ss.house,ss.granttime,ss.level,ss.traffic,ss.secret,ss.fixed_sum,
+				ss.phone_call,up.position_name position,sf.duty_everyDay,sf.overtime_pay,sf.ep_age,sf.performance,
+				sf.commission,sf.bd_benefits,sf.award,sf.other,sf.float_sum,cp.private_affairs,
+				cp.sick_leave,cp.neglect_work,cp.entry_leave_cut,cp.arrive_late,cp.social_pension,
+				cp.social_medical,cp.social_unemployment,cp.social_sum,cp.take_pension,cp.take_medical,cp.take_unemployment,
+				cp.take_injury,cp.take_birth,cp.take_sum,cp.house_pay,cp.other_cut,cp.cut_sum,pr.should_pay,pr.personal_tax,pr.real_stipend
+				
+                 FROM users u  LEFT JOIN stipend ss ON u.id=ss.emp_id AND ss.granttime=#{granttime}  LEFT JOIN com_position up 
+				 ON u.position_id = up.id  LEFT 
+			    JOIN stipend_float sf ON u.id = sf.ep_id  AND sf.granttime=#{granttime}  LEFT JOIN cut_pay cp ON u.id=cp.ep_id
+			    AND cp.granttime=#{granttime} LEFT JOIN payroll pr ON u.id=pr.ep_id AND pr.granttime=#{granttime} LEFT JOIN department de ON u.department_id=de.id
+		</select>
+		<!-- 获取固定部分薪金信息 -->
+		<select id="getFixedPart" resultType="com.jointem.hrm.entity.Stipend" parameterType="int">
+            select * from stipend where emp_id=#{id}
+           </select>
+           
+         <!-- 获取浮动部分薪金信息 -->  
+         <select id="getFloatPart" resultType="com.jointem.hrm.entity.Stipend" parameterType="int">
+           select * from stipend_float where ep_id=#{id} and granttime=#{granttime}
+         </select>
+         
+           <!-- 获取税前扣款部分薪金信息 -->
+          <select id="getCutPayPart" resultType="com.jointem.hrm.entity.Stipend" parameterType="int">
+          select * from cut_pay where ep_id=#{id} and granttime=#{granttime}
+          </select>
+          
+          <!-- 更新税前扣款部分薪金信息 -->
+          <update id="updateCutPayStipend" parameterType="com.jointem.hrm.entity.Stipend">
+          update cut_pay
+          set private_affairs=#{private_affairs},sick_leave=#{sick_leave},neglect_work=#{neglect_work},
+          entry_leave_cut=#{entry_leave_cut},arrive_late=#{arrive_late},social_pension=#{social_pension},
+          social_medical=#{social_medical},social_unemployment=#{social_unemployment},social_sum=#{social_sum},
+          take_pension=#{take_pension},take_medical=#{take_medical},take_unemployment=#{take_unemployment},
+          take_injury=#{take_injury},take_birth=#{take_birth},take_sum=#{take_sum},house_pay=#{house_pay},
+          other_cut=#{other_cut},cut_sum=#{cut_sum} where ep_id=#{emp_id} and granttime=#{granttime}
+          </update>
+          
+          <!-- 删除税前扣款部分 -->
+          <delete id="deleteCutPayStipend" parameterType="int">
+          delete  from cut_pay where ep_id=#{id} and granttime=#{granttime}
+          </delete>
+          
+	 
+	 <!-- 保存浮动薪金部分信息 -->
+	 <insert id="savaFloatStipend" parameterType="com.jointem.hrm.entity.Stipend">
+	 insert into
+	 stipend_float(duty_everyDay,overtime_pay,ep_age,performance,bd_benefits,commission,award,other,float_sum,ep_id,granttime)
+	 values(#{duty_everyDay},#{overtime_pay},#{ep_age},#{performance},#{bd_benefits},#{commission},#{award},#{other},#{float_sum},#{emp_id},#{granttime})
+	 </insert>
+	 
+	 <!-- 更新浮动部分 -->
+	 <update id="udpateFloatStipend" parameterType="com.jointem.hrm.entity.Stipend">
+	 update stipend_float
+	     set duty_everyDay=#{duty_everyDay},overtime_pay=#{overtime_pay},ep_age=#{ep_age},
+	    performance=#{performance},bd_benefits=#{bd_benefits},commission=#{commission},award=#{award},
+	    other=#{other},float_sum=#{float_sum} where ep_id=#{emp_id} and granttime=#{granttime}
+	 </update>
+	 
+	 <!-- 删除浮动部分 -->
+	 <delete id="deleteFloatStipend" parameterType="int" >
+	 delete from stipend_float where ep_id=#{id} and granttime=#{granttime}
+	 </delete>
+	 
+	 
+	 <!-- 保存薪金税前扣款部分 -->
+	 <insert id="saveCutPay" parameterType="com.jointem.hrm.entity.Stipend">
+	 insert into
+	 cut_pay(ep_id,private_affairs,sick_leave,neglect_work,entry_leave_cut,arrive_late,social_pension,social_medical,
+	 social_unemployment,social_sum,take_pension,take_medical,take_unemployment,take_injury,take_birth,take_sum,house_pay,other_cut,cut_sum,granttime)
+	 values(#{emp_id},#{private_affairs},#{sick_leave},#{neglect_work},#{entry_leave_cut},#{arrive_late},#{social_pension},#{social_medical},
+	 #{social_unemployment},#{social_sum},#{take_pension},#{take_medical},#{take_unemployment},#{take_injury},#{take_birth},#{take_sum},#{house_pay},
+	 #{other_cut},#{cut_sum},#{granttime})
+	 </insert>
+	 
+	
+	
+
+	
+	<!-- 工资结算 -->
+	<insert id="savaPayroll" parameterType="com.jointem.hrm.entity.Stipend">
+	insert into payroll(ep_id,granttime,fixed_sum,float_sum,cut_sum,should_pay,personal_tax,real_stipend)
+	values(#{emp_id},#{granttime},#{fixed_sum},#{float_sum},#{cut_sum},#{should_pay},#{personal_tax},#{real_stipend})
+	</insert>
+	
+	<!--获取结算的工资信息  -->
+	<select id="getPayroll" resultType="com.jointem.hrm.entity.Stipend" parameterType="int">
+	select * from payroll p where p.ep_id=#{id} and p.granttime=#{granttime}
+	</select>
+	
+	
+	<!--更新结算的工资信息  -->
+	<update id="updatePayroll" parameterType="com.jointem.hrm.entity.Stipend">
+	update payroll 
+	set fixed_sum=#{fixed_sum},float_sum=#{float_sum},cut_sum=#{cut_sum},should_pay=#{should_pay},personal_tax=#{personal_tax},real_stipend=#{real_stipend}
+	where ep_id=#{emp_id} and granttime=#{granttime}
+	</update>
+	
+	<!-- 添加工资条记录 -->
+	<insert id="addSalaryRecord" parameterType="com.jointem.hrm.entity.Stipend">
+	insert into 
+	salaryRecord( name,basic,eat,house,granttime,duty_everyDay,other,private_affairs,sick_leave,
+	             neglect_work,entry_leave_cut,arrive_late,social_pension,social_medical, 
+	             social_unemployment,take_pension,take_medical,take_unemployment,take_injury,
+	             take_birth,house_pay,other_cut,level,traffic,secret,overtime_pay,ep_age,performance,
+	             bd_benefits,commission,emp_id,position,phone_call,fixed_sum,award,float_sum,
+	             social_sum,take_sum,cut_sum,department,should_pay,personal_tax,real_stipend,
+	             should_attendance,real_attendance,private_leaveDay,sick_leaveDay,neglect_workDay,
+			     entry_leaveDay,late_time)
+		values(#{name},#{basic},#{eat},#{house},#{granttime},#{duty_everyDay},#{other},#{private_affairs},#{sick_leave},
+	             #{neglect_work},#{entry_leave_cut},#{arrive_late},#{social_pension},#{social_medical}, 
+	             #{social_unemployment},#{take_pension},#{take_medical},#{take_unemployment},#{take_injury},
+	             #{take_birth},#{house_pay},#{other_cut},#{level},#{traffic},#{secret},#{overtime_pay},#{ep_age},#{performance},
+	             #{bd_benefits},#{commission},#{emp_id},#{position},#{phone_call},#{fixed_sum},#{award}, #{float_sum},
+	             #{social_sum},#{take_sum},#{cut_sum}, #{department},#{should_pay},#{personal_tax},#{real_stipend},
+	             #{should_attendance},#{real_attendance},#{private_leaveDay},#{sick_leaveDay},#{neglect_workDay},
+			     #{entry_leaveDay},#{late_time})	     
+	 </insert>
+	
+	<!-- 获取用户相应月份的工资记录 -->
+	<select id="getSalaryRecordList" parameterType="int" resultType="com.jointem.hrm.entity.Stipend">
+	select * from salaryRecord where emp_id=#{id} and granttime=#{granttime}
+	</select>
+	
+	<!-- 保存结算公式 -->
+	<insert id="saveExpression" parameterType="String" >
+	 insert into expression(granttime,expression)values(#{month},#{expression})
+	</insert>
+	
+	<!-- 获取结算公式 -->
+	<select id="getExpressionByMonth" parameterType="String" resultType="String">
+	select expression from expression where granttime=#{month}
+	</select>
+	<!-- 更新结算公式 -->
+	<update id="updateExpression" parameterType="String">
+	update expression 
+	set expression=#{expression}
+	where granttime=#{month}
+	</update>
+		</mapper>

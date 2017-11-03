@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.jointem.hrm.dao.MessageDao">
+	<!-- 获取未读信息 -->
+	<resultMap type="Message" id="">
+	<id property="msgId" column="msgId"/>
+	<result property="sender_id" column="sender_id"/>
+	<result property="receiver_id" column="receiver_id"/>
+	<result property="content" column="content"/>
+	<result property="isRead" column="isRead"/>
+	<result property="message_type" column="message_type"/>
+	<result property="send_time" column="send_time"/>
+	</resultMap>
+	
+    <select id="findMessage" parameterType="int" resultType="Message">
+      select * from msg 
+      where receiver_id=#{id}
+
+    </select>
+
+    <insert id="insertMessage" parameterType="Message" useGeneratedKeys="true" keyProperty="msgId">
+    	insert into msg(sender_id,receiver_id,content,isRead,message_type,send_time)
+    	values(#{sender_id},#{receiver_id},#{content},#{isRead},#{message_type},#{send_time})
+    </insert>
+    
+    <delete id="deleteMessage" parameterType="int">
+    delete from msg where msgId=#{id}
+    </delete>
+    
+     <delete id="deleteTypeMessage" parameterType="int">
+    delete from msg where receiver_id=#{rid} and sender_id=#{sid} and message_type=#{type}
+    </delete>
+      
+    <update id="updeteMessage" parameterType="int">
+    update msg set isRead=1 where msgId=#{id}
+    </update>
+    
+
+    <update id="setIsReadStatus" parameterType="map">
+    	update msg
+    	set isRead=#{isRead}
+    	where receiver_id=#{receiver_id}
+    </update>
+    
+    <select id="toReadEducateCheckMsg" parameterType="int">
+     update msg set isRead=1 where sender_id=#{educate_id}
+   </select>
+ 
+</mapper>

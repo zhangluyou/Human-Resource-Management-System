@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.jointem.hrm.dao.InstitutionDao">
+	<resultMap id="BaseResultMap" type="com.jointem.hrm.entity.Institution">
+		<id column="id" property="id" jdbcType="INTEGER" />
+		<result column="userid" property="userid" jdbcType="INTEGER" />
+		<result column="type" property="type" jdbcType="VARCHAR" />
+		<result column="content" property="content" jdbcType="VARCHAR" />
+		<result column="createtime" property="createtime" jdbcType="TIMESTAMP" />
+
+	</resultMap>
+
+<!--	<resultMap id="institution" type="java.util.Map">
+		<id column="id" property="id" jdbcType="INTEGER" />
+		<result column="name" property="name" jdbcType="VARCHAR" />
+		<result column="type" property="type" jdbcType="VARCHAR" />
+		<result column="content" property="content" jdbcType="VARCHAR" />
+		<result column="createtime" property="createtime" jdbcType="TIMESTAMP" />
+
+	</resultMap>-->
+
+	<insert id="addRap" parameterType="com.jointem.hrm.entity.Institution">
+        insert into rap (userid,type,content,createtime,msgid) 
+        values(#{userid},#{type},#{content},#{createtime},#{msgid})
+   </insert>
+
+	<insert id="addMsg" parameterType="com.jointem.hrm.entity.Message"
+		useGeneratedKeys="true" keyProperty="msgId" >
+		insert into msg(sender_id,receiver_id,content,isRead,message_type,send_time)
+		values(#{sender_id},#{receiver_id},#{content},#{isRead},#{message_type},#{send_time})
+	</insert>
+
+
+
+
+
+	<update id="setIsReadStatus" parameterType="map">
+		update msg
+		set isRead=#{isRead}
+		where msg.msgId=#{msgid}
+	</update>
+
+	<select id="selectAllInstitution" resultType="java.util.HashMap" parameterType="map" >
+		select Distinct r.id,r.userid ,u.username, u.name,r.type,r.content,r.createtime,m.isread
+		from rap r,users u,msg m
+		where r.userid=u.id and m.msgId=r.msgid and m.message_type=1
+		<trim>
+			<if test="name != null">
+					and u.name like concat(concat('%',#{name}),'%')
+			</if>
+
+			<if test="pageSize != null and pageNum != null">
+				limit #{pageNum} ,#{pageSize}
+			</if>
+		</trim>
+	</select>
+	<select id="selectAllInstitutionCount" resultType="int" parameterType="String" >
+		select count(Distinct r.id,r.userid ,u.username, u.name,r.type,r.content,r.createtime,m.isread)
+		from rap r,users u ,msg m
+		where  r.userid=u.id and m.msgId=r.msgid and m.message_type=1
+		<trim>
+			<if test="_parameter != null">
+				and u.name like concat(concat('%',#{_name,jdbcType=VARCHAR}),'%')
+			</if>
+
+		</trim>
+	</select>
+	<select id="selectInstitutionsById" resultType="java.util.HashMap" parameterType="map" >
+		select Distinct r.id,r.userid ,u.username, u.name,r.type,r.content,r.createtime,m.isread,r.msgid
+		from rap r,users u,msg m
+		where r.userid=u.id and m.msgId=r.msgid and m.message_type=1 and r.userid= #{userid,jdbcType=INTEGER}
+		<trim>
+			<if test="name != null">
+				and u.name like concat(concat('%',#{name}),'%')
+			</if>
+			<if test="isRead == 1">
+				 order by m.isRead DESC
+			</if>
+			<if test="isRead == 0">
+				order by m.isRead
+			</if>
+			<if test="pageSize != null and pageNum != null">
+				limit #{pageNum} ,#{pageSize}
+			</if>
+		</trim>
+	</select>
+	<select id="selectInstitutionsCountById" resultType="int" parameterType="map" >
+		select count(Distinct r.id)
+		from rap r,users u,msg m
+		where r.userid=u.id and m.msgId=r.msgid and m.message_type=1 and r.userid= #{userid,jdbcType=INTEGER}
+		<trim>
+			<if test="name != null">
+				and u.name like concat(concat('%',#{name,jdbcType=VARCHAR}),'%')
+			</if>
+			<if test="isRead == 1">
+				order by m.isRead DESC
+			</if>
+			<if test="isRead == 0">
+				order by m.isRead
+			</if>
+		</trim>
+	</select>
+	<select id="selectByPrimaryKey" resultType="java.util.HashMap" parameterType="java.lang.Integer" >
+		select  r.id ,r.userid,r.msgid,u.username, u.name,r.type,r.content,r.createtime,m.isRead
+		from rap r,users u,msg m
+		where r.userid=u.id and r.msgid=m.msgId and r.id = #{id,jdbcType=INTEGER} limit 1
+	</select>
+	<delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+		delete r,m  from rap r, msg m
+		where m.msgId=r.msgid and  r.id = #{id,jdbcType=INTEGER}
+	</delete>
+	<delete id="delectInstitutionByIds" parameterType="java.lang.Integer">
+		delete r,m  from rap r, msg m
+		where m.msgId=r.msgid and r.id IN
+		<foreach collection="list" index="index" item="id" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</delete>
+	<update id="updateSelective" parameterType="map" >
+		update rap r,msg m
+		<set>
+			<if test="userid != null" >
+				r.userid = #{userid,jdbcType=INTEGER},m.receiver_id= #{userid,jdbcType=INTEGER},
+			</if>
+			<if test="type != null" >
+				r.type = #{type,jdbcType=VARCHAR},
+			</if>
+			<if test="content != null" >
+				r.content = #{content,jdbcType=LONGVARCHAR},m.isRead=0
+			</if>
+
+		</set>
+		where r.id = #{id,jdbcType=INTEGER} and r.msgid=m.msgId
+	</update>
+</mapper>

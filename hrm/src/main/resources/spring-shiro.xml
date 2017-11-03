@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" 
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd"
+       default-lazy-init="true"> 
+
+    <!-- 安全管理 -->
+    <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+        <!-- Single realm app.  If you have multiple realms, use the 'realms' property instead. -->
+        <property name="realm" ref="authRealm"/><!-- 引用自定义的realm -->
+    </bean>
+
+    <!-- 安全管理器 -->
+    <bean id="securityManagerForMobile" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+        <property name="realm" ref="statelessRealm"/>
+        <property name="subjectDAO.sessionStorageEvaluator.sessionStorageEnabled" value="false"/>
+        <property name="subjectFactory" ref="subjectFactory"/>
+        <property name="sessionManager" ref="sessionManager"/>
+    </bean>
+
+
+    <!-- 相当于调用SecurityUtils.setSecurityManager(securityManager) -->
+    <bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+        <property name="staticMethod" value="org.apache.shiro.SecurityUtils.setSecurityManager"/>
+        <property name="arguments" ref="securityManagerForMobile"/>
+    </bean>
+
+    <bean id="statelessAuthcFilter" class="com.jointem.hrm.filter.StatelessAuthcFilter"/>
+
+    <!-- Subject工厂 -->
+    <bean id="subjectFactory" class="com.jointem.hrm.mgt.StatelessDefaultSubjectFactory"/>
+    <!-- webRealm -->
+    <bean id="authRealm" class="com.jointem.hrm.auth.HrmRealm"/>
+    <!-- 移动端Realm -->
+    <bean id="statelessRealm" class="com.jointem.hrm.auth.StatelessRealm">
+        <property name="cachingEnabled" value="false"/>
+    </bean>
+
+    <!-- 会话管理器 -->
+    <bean id="sessionManager" class="org.apache.shiro.session.mgt.DefaultSessionManager">
+        <property name="sessionValidationSchedulerEnabled" value="false"/>
+    </bean>
+
+
+    <!-- 此bean要被web.xml引用,和web.xml中的filtername同名 -->
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+        <property name="securityManager" ref="securityManager"/>
+        <property name="loginUrl" value="/welcome/index" /> <!-- 没有认证返回地址 -->
+        <property name="successUrl" value="/hrm/welcome/manage" />
+        <property name="unauthorizedUrl" value="/index2.jsp" /> <!-- 没有授权返回地址 -->
+        <!--自定义的filter-->
+        <property name="filters">
+            <map>
+                <entry key="logout" value-ref="logoutFilter"/>
+            </map>
+        </property>
+
+        <property name="filterChainDefinitions">
+            <value>            <!-- **代表任意子目录 -->
+<!--                 /welcome/** = anon -->
+<!--                 /api/** = anon -->
+<!--                 /educate/** = authc,roles[admin] -->
+                <!--/users/** = authc-->
+                /logout=logout
+            </value>
+        </property>
+    </bean>
+
+    <bean id="shiroFilterForMobile" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+        <property name="securityManager" ref="securityManagerForMobile"/>
+        <property name="loginUrl" value="/hrm/welcome/index" /> <!-- 没有认证返回地址 -->
+        <property name="successUrl" value="/hrm/welcome/manage" />
+        <property name="unauthorizedUrl" value="/index2.jsp" /> <!-- 没有授权返回地址 -->
+        <!--自定义的filter-->
+        <property name="filters">
+            <map>
+                <entry key="statelessAuthc" value-ref="statelessAuthcFilter"/>
+            </map>
+        </property>
+
+        <property name="filterChainDefinitions">
+            <value>            <!-- **代表任意子目录 -->
+                /mobile/oo/**=statelessAuthc,roles[admin]
+                <!--/mobile/tt/**=statelessAuthc,roles[admin]-->
+                <!--/welcome/** = anon-->
+            </value>
+        </property>
+    </bean>
+    <!--自定义LogoutFilter,退出-->
+    <bean id="logoutFilter" class="com.jointem.hrm.filter.SystemLogoutFilter">
+        <property name="redirectUrl" value="/welcome/index"/>
+    </bean>
+
+    <!-- 保证实现了Shiro内部lifecycle函数的bean执行 -->
+    <bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>
+
+    <!-- 生成代理，通过代理进行控制 -->
+    <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"
+          depends-on="lifecycleBeanPostProcessor">
+    </bean>
+
+    <!-- 安全管理器 -->
+    <bean id="author1" class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+        <property name="securityManager" ref="securityManager"/>
+    </bean>
+
+</beans>

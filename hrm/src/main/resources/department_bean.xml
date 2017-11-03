@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.jointem.hrm.dao.DepartmentDao" >
+  <resultMap id="BaseResultMap" type="com.jointem.hrm.entity.Department" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="url" property="url" jdbcType="VARCHAR" />
+    <result column="name" property="name" jdbcType="VARCHAR" />
+  </resultMap>
+ 
+  <select id="selectAllDepartment" resultType="com.jointem.hrm.entity.Department" >
+  select d.id ,d.department_name departmentName,d.parent_did pId from department d
+  </select>
+  
+  <delete id="deleteDepartment">
+  delete from department where id=#{id}
+  </delete>
+  
+  <update id="setDepartment">
+  update department set department_name=#{departmentName}
+  where id=#{id}
+  </update>
+  
+  <insert id="insertDepartment" parameterType="com.jointem.hrm.entity.Department"
+		useGeneratedKeys="true" keyProperty="id">
+  	insert into department(department_name,parent_did) values(#{departmentName},#{pId})
+  </insert>
+</mapper>

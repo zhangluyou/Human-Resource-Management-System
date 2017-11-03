@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.jointem.hrm.dao.FileDao" >
+  <resultMap id="BaseResultMap" type="com.jointem.hrm.entity.File" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="file_num" property="fileNum" jdbcType="INTEGER" />
+    <result column="rank_num" property="rankNum" jdbcType="INTEGER" />
+    <result column="salary" property="salary" jdbcType="INTEGER" />
+  </resultMap>
+ 
+  <select id="selectRankNum" resultMap="BaseResultMap" >
+  select  distinct(rank_num) from file 
+  order by rank_num desc
+  </select>
+  
+   <select id="selectFileNum" resultMap="BaseResultMap" >
+  	select  file_num  from file where rank_num=#{num}
+ 	 order by file_num desc
+  </select>
+  
+  <select id="selectFileSalaryById" resultMap="BaseResultMap" >
+  select  salary  from file 
+  where id=#{id}
+  </select>
+  
+  <select id="selectFileSalaryByIds" resultMap="BaseResultMap" >
+  select id, salary  from file 
+  where rank_num=#{rankNum} and file_num=#{fileNum}
+  </select>
+  
+  <select id="selectAllFile" resultMap="BaseResultMap" >
+  select * from file 
+  </select>
+  
+  <delete id="deleteFile">
+  delete from file where id=#{id}
+  </delete>
+  
+   <delete id="deleteFileByIds">
+  delete from file where rank_num=#{rankNum} and
+  file_num=#{fileNum}
+  </delete>
+  
+  <update id="setFile">
+  update file set salary=#{salary}
+  where rank_num=#{rankNum} and
+  file_num=#{fileNum}
+  </update>
+  
+  <insert id="insertFile" parameterType="com.jointem.hrm.entity.File"
+		useGeneratedKeys="true" keyProperty="id">
+  	insert into file(file_num,rank_num,salary) values(#{fileNum},#{rankNum},#{salary})
+  </insert>
+</mapper>

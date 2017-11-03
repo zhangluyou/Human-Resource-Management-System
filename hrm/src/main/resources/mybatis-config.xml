@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+
+	<typeAliases>
+		<typeAlias alias="Candidate" type="com.jointem.hrm.entity.Candidate" />
+		<typeAlias alias="Talent" type="com.jointem.hrm.entity.Talent"/>
+		<typeAlias alias="Users" type="com.jointem.hrm.entity.Users"/> 
+		<typeAlias alias="Educate" type="com.jointem.hrm.entity.Educate"/>
+		<typeAlias alias="Roles" type="com.jointem.hrm.entity.Roles"/>
+		<typeAlias alias="Message" type="com.jointem.hrm.entity.Message"/>
+		<typeAlias alias="Department" type="com.jointem.hrm.entity.Department"/>
+		<typeAlias alias="Position" type="com.jointem.hrm.entity.Position"/>
+		<typeAlias alias="File" type="com.jointem.hrm.entity.File"/>
+	</typeAliases>
+
+	<!-- mapping 文件路径配置 -->
+	<!--<mappers>-->
+		<!--<mapper resource="candidate_bean.xml" />-->
+		<!--<mapper resource="talent_bean.xml" />-->
+		<!--<mapper resource="educate_bean.xml"/>-->
+		<!--<mapper resource="users_bean.xml"/>-->
+	<!--</mappers>-->
+<!-- 	<mappers> -->
+<!-- 		<mapper resource="RolesMapper.xml"/> -->
+<!-- 	</mappers> -->
+	 
+</configuration>

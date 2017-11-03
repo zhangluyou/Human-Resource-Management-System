@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jointem.hrm.dao.CandidateDao">
+
+	<insert id="insertCandidate" parameterType="Candidate">
+		insert
+		into
+		candidate(job,salary,interview_time,duty_time,channel,origin,name,sex,native_place,
+		edu,peoples,birthday,domicile,height,weight,marriage,only_child,political_status,
+		address,wort_time,work_age,social_security,phone,contacts,contacts_phone,email,
+		wechat,qq,is_adjust,cause,education,work,training,certificate,skill,interest,specialty,
+		family,instruction,acquaintances,state)
+		values
+		(#{job},#{salary},#{interviewTime},#{dutyTime},#{channel},#{origin},#{name},#{sex},#{nativePlace},
+		#{edu},#{peoples},#{birthday},#{domicile},#{height},#{weight},#{marriage},#{onlyChild},#{politicalStatus},
+		#{address},#{workTime},#{workAge},#{socialSecurity},#{phone},#{contacts},#{contactsPhone},#{email},
+		#{wechat},#{qq},#{isAdjust},#{cause},#{education},#{work},#{training},#{certificate},#{skill},#{interest},#{specialty},
+		#{family},#{instruction},#{acquaintances},#{state})
+	</insert>
+
+	<delete id="deleteCandidateById" parameterType="int">
+		delete
+		from
+		candidate 
+		where
+        id = #{id}
+	</delete>
+
+	<update id="stock" parameterType="int">
+		update
+		candidate c
+		set
+		c.state = 1
+		where
+		c.id = #{id}
+	</update>
+
+	<select id="totale" resultType="int">
+		select
+		count(c.id)
+		from
+		candidate c
+		<where>
+			<if test="job!=null and job!=''">
+				c.job like concat(concat('%',#{job}),'%')
+			</if>
+			and c.state = 0
+		</where>
+	</select>
+
+	<select id="selectCandidate" resultMap="candidates">
+		select
+		*
+		from
+		candidate c
+		where
+		c.id = #{id}
+	</select>
+
+
+	<select id="selectCandidates" resultMap="candidates">
+		select
+		id, name, sex, job, interview_time
+		from
+		candidate
+		<where>
+			<if test="job!=null and job!=''">
+				job like concat(concat('%',#{job}),'%')
+			</if>
+			and
+			state = 0
+		</where>
+		<choose>
+			<when test="sort == 'asc' ">
+				order by
+				interview_time
+				asc
+			</when>
+			<when test="sort == 'desc' ">
+				order by
+				interview_time
+				desc
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+		limit
+		#{startRow},#{pageSize}
+	</select>
+
+	<resultMap type="Candidate" id="candidates">
+		<id column="id" property="id" />
+		<result column="job" property="job" />
+		<result column="salary" property="salary" />
+		<result column="interview_time" property="interviewTime" />
+		<result column="duty_time" property="dutyTime" />
+		<result column="channel" property="channel" />
+		<result column="origin" property="origin" />
+		<result column="name" property="name" />
+		<result column="sex" property="sex" />
+		<result column="native_place" property="nativePlace" />
+		<result column="edu" property="edu" />
+		<result column="peoples" property="peoples" />
+		<result column="birthday" property="birthday" />
+		<result column="domicile" property="domicile" />
+		<result column="height" property="height" />
+		<result column="weight" property="weight" />
+		<result column="marriage" property="marriage" />
+		<result column="only_child" property="onlyChild" />
+		<result column="political_status" property="politicalStatus" />
+		<result column="address" property="address" />
+		<result column="wort_time" property="wortTime" />
+		<result column="work_age" property="workAge" />
+		<result column="social_security" property="socialSecurity" />
+		<result column="phone" property="phone" />
+		<result column="contacts" property="contacts" />
+		<result column="contactsPhone" property="contactsPhone" />
+		<result column="email" property="email" />
+		<result column="wechat" property="wechat" />
+		<result column="qq" property="qq" />
+		<result column="is_adjust" property="isAdjust" />
+		<result column="cause" property="cause" />
+		<result column="education" property="education" />
+		<result column="work" property="work" />
+		<result column="training" property="training" />
+		<result column="certificate" property="certificate" />
+		<result column="skill" property="skill" />
+		<result column="interest" property="interest" />
+		<result column="specialty" property="specialty" />
+		<result column="family" property="family" />
+	</resultMap>
+
+</mapper>

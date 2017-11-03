@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.jointem.hrm.dao.PermissionDao" >
+  <resultMap id="BaseResultMap" type="com.jointem.hrm.entity.Permissions" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="url" property="url" jdbcType="VARCHAR" />
+    <result column="name" property="name" jdbcType="VARCHAR" />
+  </resultMap>
+  
+  <sql id="Example_Where_Clause" >
+    <where >
+      <foreach collection="oredCriteria" item="criteria" separator="or" >
+        <if test="criteria.valid" >
+          <trim prefix="(" suffix=")" prefixOverrides="and" >
+            <foreach collection="criteria.criteria" item="criterion" >
+              <choose >
+                <when test="criterion.noValue" >
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue" >
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue" >
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue" >
+                  and ${criterion.condition}
+                  <foreach collection="criterion.value" item="listItem" open="(" close=")" separator="," >
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause" >
+    <where >
+      <foreach collection="example.oredCriteria" item="criteria" separator="or" >
+        <if test="criteria.valid" >
+          <trim prefix="(" suffix=")" prefixOverrides="and" >
+            <foreach collection="criteria.criteria" item="criterion" >
+              <choose >
+                <when test="criterion.noValue" >
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue" >
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue" >
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue" >
+                  and ${criterion.condition}
+                  <foreach collection="criterion.value" item="listItem" open="(" close=")" separator="," >
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List" >
+    id, url, name
+  </sql>
+  
+<!-- 查询角色以及对应的权限-->
+  	<resultMap id="roleMap" type="com.jointem.hrm.entity.Roles">
+		<id column="id" property="id" jdbcType="INTEGER" />
+		<result column="description" property="description" jdbcType="VARCHAR" />
+		<collection property="permissionsList" column="id" javaType="list" select="selectPermissionList"></collection>
+	</resultMap>
+  	
+	 <resultMap id="permissionMap" type="com.jointem.hrm.entity.Permissions" >
+	    <id column="id" property="id" jdbcType="INTEGER" />
+	    <result column="url" property="url" jdbcType="VARCHAR" />
+	    <result column="name" property="name" jdbcType="VARCHAR" />
+  	</resultMap>
+  	
+  	<select id="selectPermissionList" resultMap="permissionMap" parameterType="java.lang.Integer">
+  		select id, url,name 
+  		from permissions where id in (select roles_permissions.permission_id from roles_permissions where roles_permissions.role_id=#{id})
+  	</select>
+
+	<!-- 按角色呢称查找用户角色列表 -->
+	<select id="findRolesAndPermissionsList" parameterType="map" resultMap="roleMap">
+		select * from roles
+		<if test="searchText !=null and searchText!='' ">	
+			where roles.description  LIKE concat('%',#{searchText},'%')
+		</if>
+		<if test="start !=null and pageSize != null">
+			limit #{start},#{pageSize}
+		</if>
+	</select>
+<!-- 查询角色以及对应的权限 -->
+  
+  
+
+<!-- 查询权限分配的总页数 ,根据角色名称-->
+	<select id="findRolesAndPermissionCount"  parameterType="map" resultType="int">
+		select count(*) from roles
+		<if test="searchText !=null and searchText!='' ">
+			where roles.description  LIKE concat('%',#{searchText},'%')
+		</if>
+	</select>
+<!-- 查询权限分配的总页数 ,根据角色名称-->
+  
+  
+  <!-- 查询所有的权限列表 -->
+  <select id="findAllPermission"  resultType="com.jointem.hrm.entity.Permissions">
+		select id,url,name from permissions
+	</select>
+  <!-- 查询所有的权限列表 -->
+  
+ 
+  
+  
+  
+  
+  
+<!-- 按权限名称或资源查找权限列表 -->
+  <select id="findCurrPermissions" parameterType="map" resultType="com.jointem.hrm.entity.Permissions">
+  		select * from permissions
+		<if test="searchText !=null and searchText!='' ">	
+			where(permissions.name  LIKE concat('%',#{searchText},'%') or
+				permissions.url  LIKE concat('%',#{searchText},'%')
+				)
+		</if>
+		<if test="start !=null and pageSize != null">
+			limit #{start},#{pageSize}
+		</if>
+  </select>
+<!-- 按权限名称或资源查找权限列表 -->  
+  
+ 
+<!-- 按权限名称或资源查找权限列总条数 -->
+	<select id="findPermissionsCount"  parameterType="map" resultType="int">
+		select count(*) from permissions
+		<if test="searchText !=null and searchText!='' ">
+			where(permissions.name  LIKE concat('%',#{searchText},'%') or
+				permissions.url  LIKE concat('%',#{searchText},'%')
+				)
+		</if>
+	</select>
+<!-- 按权限名称或资源查找权限列总条数 -->
+  
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from permissions
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+<!-- 根据id删除权限 -->
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from permissions
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+<!-- 根据id删除权限 -->
+
+<!-- 根据角色id删除roles_permissions -->
+  <delete id="clearRolesPermissionsByRoleId" parameterType="java.lang.Integer" >
+    delete from roles_permissions
+    where role_id = #{role_id,jdbcType=INTEGER}
+  </delete>
+  
+  
+<!-- 根据角色id删除角色权限关联表（roles_permissions）中的数据 -->	
+	<delete id="deleteRolesPermissionsByRoleId" parameterType="com.jointem.hrm.entity.RolesPermissions">
+		delete from roles_permissions
+		where role_id=#{role_id}
+	</delete>
+<!-- 根据角色id删除角色权限关联表（roles_permissions）中的数据 -->	
+
+<!-- 根据角色id删除roles_permissions -->
+
+  <insert id="insert" parameterType="com.jointem.hrm.entity.Permissions" >
+    insert into permissions (id, url, name
+      )
+    values (#{id,jdbcType=INTEGER}, #{url,jdbcType=VARCHAR}, #{name,jdbcType=VARCHAR}
+      )
+  </insert>
+  
+ <!-- 为用户分配角色，将用户id以及对应的角色id插入users_roles表中 -->
+	<insert id="updateRolesPermission" parameterType="com.jointem.hrm.entity.RolesPermissions">
+	    insert into roles_permissions (role_id, permission_id)
+	    values (#{role_id,jdbcType=INTEGER}, #{permission_id,jdbcType=INTEGER})
+	</insert>
+<!-- 为用户分配角色，将用户id以及对应的角色id插入users_roles表中 -->
+  
+  <insert id="insertSelective" parameterType="com.jointem.hrm.entity.Permissions" >
+    insert into permissions
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="url != null" >
+        url,
+      </if>
+      <if test="name != null" >
+        name,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="url != null" >
+        #{url,jdbcType=VARCHAR},
+      </if>
+      <if test="name != null" >
+        #{name,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByExampleSelective" parameterType="map" >
+    update permissions
+    <set >
+      <if test="record.id != null" >
+        id = #{record.id,jdbcType=INTEGER},
+      </if>
+      <if test="record.url != null" >
+        url = #{record.url,jdbcType=VARCHAR},
+      </if>
+      <if test="record.name != null" >
+        name = #{record.name,jdbcType=VARCHAR},
+      </if>
+    </set>
+    <if test="_parameter != null" >
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+   
+  <update id="updateByExample" parameterType="map" >
+    update permissions
+    set id = #{record.id,jdbcType=INTEGER},
+      url = #{record.url,jdbcType=VARCHAR},
+      name = #{record.name,jdbcType=VARCHAR}
+    <if test="_parameter != null" >
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  
+<!-- 通过id更新权限 -->
+  <update id="updateByPrimaryKeySelective" parameterType="com.jointem.hrm.entity.Permissions" >
+    update permissions
+    <set >
+      <if test="url != null" >
+        url = #{url,jdbcType=VARCHAR},
+      </if>
+      <if test="name != null" >
+        name = #{name,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+<!-- 通过id更新权限 -->
+
+
+  <update id="updateByPrimaryKey" parameterType="com.jointem.hrm.entity.Permissions" >
+    update permissions
+    set url = #{url,jdbcType=VARCHAR},
+      name = #{name,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+ 
+</mapper>
